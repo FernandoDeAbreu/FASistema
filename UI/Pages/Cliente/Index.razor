@@ -1,0 +1,66 @@
+﻿@page "/clientes"
+
+@using System.Collections.Generic
+@using System.Net.Http
+@using System.Text.Json
+@using Domain.Entities
+
+<h1>Clientes</h1>
+
+<RadzenDataGrid Data="@cliente" TItem="Cliente" AllowVirtualization="true" Style="height:400px"
+                AllowFiltering="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" LogicalFilterOperator="LogicalFilterOperator.Or"
+                AllowSorting="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="Cliente" Property="Id" Title="ID" Width="100px" />
+        <RadzenDataGridColumn TItem="Cliente" Property="RazaoSocial" Title="ProductID" />
+              <RadzenDataGridColumn TItem="Cliente" Property="Fantasia" Title="Fantasia" />
+        <RadzenDataGridColumn TItem="Cliente" Property="Celular" Title="Celular">
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private List<Cliente> cliente;
+   
+    bool isLoading = false;
+
+    async Task ShowLoading()
+    {
+        isLoading = true;
+
+        await Task.Yield();
+
+        isLoading = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cliente = await GetClientesAsync();
+        await ShowLoading();
+    }
+
+    private async Task<List<Cliente>> GetClientesAsync()
+    {
+        try
+        {
+            // Faça a chamada à API para obter a lista de clientes
+            HttpClient httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("http://localhost:5290/api/ClienteGetAll");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var clientesJson = await response.Content.ReadAsStringAsync();
+                var clientesData = JsonSerializer.Deserialize<List<Cliente>>(clientesJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return clientesData;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+}
